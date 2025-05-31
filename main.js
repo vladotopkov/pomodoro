@@ -10,19 +10,20 @@ const timerDisplay = document.getElementById("timer-display");
 
 //Get user input values
 
-let workTime = document.getElementById('work-time');
-let breakTime = document.getElementById('break-time');
-let cyclesNumber = document.getElementById('cycles');
+let workTimeInput = document.getElementById('work-time');
+let breakTimeInput = document.getElementById('break-time');
+let cyclesNumberInput = document.getElementById('cycles');
 
 
 
 //add bindings to track current state
 
-let isRunning = false;
+let isWorkPhase = false;
+let isBreakPhase = false;
 let stopped = true;
 let paused = true;
 let cycleCount = 0;
-
+let cycles = 0;
 
 
 
@@ -38,46 +39,83 @@ let countdown;
 
 
 function updateTimer() {
-
+    if(time < 60){
+        const seconds = time;
+        timerDisplay.innerText = `00:${seconds < 10 ? '0' : ''}${seconds}`;
+        time--;
+    }else {
     const minutes = Math.floor(time / 60);
     const seconds = time % 60;
+    
     timerDisplay.innerText = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
     time--;
+    }
 
     if (time < 0) {
         clearInterval(countdown);
+        while(cycleCount <= cycles){
+
+            if(isWorkPhase){
+                changeTime(breakTimeInput.valueAsNumber);
+                countLogic();
+                isWorkPhase = false;
+                isBreakPhase = true;
+                return;
+            }
+            if(isBreakPhase){
+                changeTime(workTimeInput.valueAsNumber);
+                countLogic();
+                isWorkPhase = true;
+                isBreakPhase = false;
+                cycleCount++;
+                return;
+            }
+
+        }
+        clearInterval(countdown);
         timerDisplay.innerText = "Time's up!";
+        isWorkPhase  = false;
+        isBreakPhase = false;
     }
 }
     
 
 function changeTime(duration) {
-    console.log(duration);
     startMinutes = duration || 25;
-    time = startMinutes * 60;
-    console.log(time);
+    time = Math.round(startMinutes * 60);
+    console.log("duration in changeTime: " + duration);
+    console.log("time in changeTime: " + time);
 }
 
 
+function countLogic(){
+    console.log("time in countLogic: " + time);
+    updateTimer(); 
+    countdown = setInterval(updateTimer, 1000);
+    cycleCount++;
+}
 
 
 
 
 //event listeners
 
+
+//start of cycle
 startBtn.addEventListener('click', (e) => {
-    if(isRunning) return;
-    changeTime(workTime.valueAsNumber);
-    updateTimer(); // Initial call to display immediately
-    countdown = setInterval(updateTimer, 1000);
-    isRunning = true;
+    if(isWorkPhase || isBreakPhase) return;
+    cycles = cyclesNumberInput.valueAsNumber;
+    changeTime(workTimeInput.valueAsNumber);
+    countLogic();
+    isWorkPhase = true;
 });
 
-
+//reset cycles
 stopBtn.addEventListener('click', (e) => {
     clearInterval(countdown);
     timerDisplay.innerText = "25:00";
-    isRunning = false;
+    isWorkPhase  = false;
+    isBreakPhase = false;
 });
 
 
