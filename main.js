@@ -25,57 +25,66 @@ let paused = true;
 let cycleCount = 0;
 let cycles = 0;
 
+const beepSound = new Audio('sound.mp3');
 
+function playBeep() {
+    beepSound.play();
+}
 
 
 
 //countdown timer logic
 
 
-let startMinutes = 25;   
+let startMinutes = 0.02;   
 let time = startMinutes * 60;
 let countdown;
 
-
+let breakCount = "break";
+let workCount = "work";
 
 function updateTimer() {
-    if(time < 60){
-        const seconds = time;
-        timerDisplay.innerText = `00:${seconds < 10 ? '0' : ''}${seconds}`;
-        time--;
-    }else {
+
     const minutes = Math.floor(time / 60);
     const seconds = time % 60;
     
-    timerDisplay.innerText = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    timerDisplay.innerText = `${(minutes < 10) ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
     time--;
-    }
+    
 
-    if (time < 0) {
+    if (time < 0) { //after startButton setInterval lead time to zero
         clearInterval(countdown);
-        while(cycleCount <= cycles){
 
+        if(cycleCount < cycles){
+
+            
             if(isWorkPhase){
+                console.log(breakCount);
+                cycleCount++;
+                playBeep();
                 changeTime(breakTimeInput.valueAsNumber);
-                countLogic();
+                startCountLogic();
                 isWorkPhase = false;
                 isBreakPhase = true;
                 return;
             }
             if(isBreakPhase){
+                console.log(workCount);
+                playBeep();
                 changeTime(workTimeInput.valueAsNumber);
-                countLogic();
+                startCountLogic();
                 isWorkPhase = true;
                 isBreakPhase = false;
-                cycleCount++;
                 return;
             }
 
         }
-        clearInterval(countdown);
+
+        playBeep();
         timerDisplay.innerText = "Time's up!";
         isWorkPhase  = false;
         isBreakPhase = false;
+        cycleCount = 0;
     }
 }
     
@@ -83,16 +92,12 @@ function updateTimer() {
 function changeTime(duration) {
     startMinutes = duration || 25;
     time = Math.round(startMinutes * 60);
-    console.log("duration in changeTime: " + duration);
-    console.log("time in changeTime: " + time);
 }
 
 
-function countLogic(){
-    console.log("time in countLogic: " + time);
+function startCountLogic(){
     updateTimer(); 
     countdown = setInterval(updateTimer, 1000);
-    cycleCount++;
 }
 
 
@@ -103,11 +108,12 @@ function countLogic(){
 
 //start of cycle
 startBtn.addEventListener('click', (e) => {
+    console.log(workCount);
     if(isWorkPhase || isBreakPhase) return;
+    isWorkPhase = true;
     cycles = cyclesNumberInput.valueAsNumber;
     changeTime(workTimeInput.valueAsNumber);
-    countLogic();
-    isWorkPhase = true;
+    startCountLogic();
 });
 
 //reset cycles
@@ -116,11 +122,14 @@ stopBtn.addEventListener('click', (e) => {
     timerDisplay.innerText = "25:00";
     isWorkPhase  = false;
     isBreakPhase = false;
+    cycleCount = 0;
 });
 
 
-
-
+//pause
+pauseBtn.addEventListener('click', (e) => {
+    
+});
 
 
 
